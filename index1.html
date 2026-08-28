@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="tr">
+<script> 
+document.addEventListener('DOMContentLoaded', () => {
+            const button = document.querySelector('button');
+            
+            button.addEventListener('click', () => {
+                alert('Tebrikler! İlk JavaScript kodunu başarıyla çalıştırdın 🚀');
+            });
+        });
+</script>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İlk Web Sitem</title>
+    <style>
+        body {
+            background-color: #f4f4f9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+            max-width: 480px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+
+        h2, h3 {
+            color: #2980b9;
+        }
+
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #2980b9;
+        }
+
+        img {
+            max-width: 100%;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Merhaba Dünya!</h1>
+        <p>Ben yazılım öğrenmeye başladım. Bu benim ilk web sayfam.</p>
+
+        <h2>Hakkımda</h2>
+        <p>Adım adım ilerliyorum ve web geliştirmeyi öğreniyorum.</p>
+
+        <h3>Hobilerim</h3>
+        <ul>
+            <li>Oyun oynamak</li>
+            <li>Teknoloji videoları izlemek</li>
+            <li>Yazılım geliştirmek</li>
+        </ul>
+
+        <h3>Bağlantılar</h3>
+        <a href="https://www.google.com" target="_blank">Google'a Git</a>
+
+        <h3>Favori Görselim</h3>
+        <img src="https://picsum.photos/300/200" alt="Rastgele görsel">
+
+        <br><br>
+        <button type="button">Bana Tıkla</button>
+    </div>
+
+</body>
+</html>

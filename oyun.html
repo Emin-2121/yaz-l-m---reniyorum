@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Space Shooter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            background-color: #0d0e15;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            color: #fff;
+        }
+
+        #game-container {
+            position: relative;
+            box-shadow: 0 0 30px rgba(0, 240, 255, 0.3), 0 0 50px rgba(255, 0, 127, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 2px solid rgba(0, 240, 255, 0.5);
+        }
+
+        canvas {
+            background: #050608;
+            display: block;
+        }
+
+        .ui-panel {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            right: 15px;
+            display: flex;
+            justify-content: space-between;
+            font-size: 18px;
+            font-weight: bold;
+            text-shadow: 0 0 8px #00f0ff;
+            pointer-events: none;
+        }
+
+        .game-over-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(13, 14, 21, 0.9);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .game-over-screen h1 {
+            color: #ff007f;
+            font-size: 36px;
+            text-shadow: 0 0 15px #ff007f;
+            margin-bottom: 10px;
+        }
+
+        .game-over-screen p {
+            font-size: 20px;
+            color: #00f0ff;
+            margin-bottom: 25px;
+        }
+
+        .restart-btn {
+            padding: 12px 28px;
+            background: linear-gradient(90deg, #ff007f, #00f0ff);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(255, 0, 127, 0.5);
+            transition: 0.2s;
+        }
+
+        .restart-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px rgba(0, 240, 255, 0.8);
+        }
+
+        .controls-hint {
+            margin-top: 15px;
+            color: #a0aec0;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-container">
+        <div class="ui-panel">
+            <div>SKOR: <span id="score">0</span></div>
+            <div>CAN: <span id="lives">❤️❤️❤️</span></div>
+        </div>
+
+        <div id="gameOverScreen" class="game-over-screen" style="display: none;">
+            <h1>GAME OVER</h1>
+            <p>Toplam Skor: <span id="finalScore">0</span></p>
+            <button class="restart-btn" onclick="resetGame()">YENİDEN BAŞLA 🚀</button>
+        </div>
+
+        <canvas id="gameCanvas" width="400" height="550"></canvas>
+    </div>
+
+    <div class="controls-hint">
+        🎮 <b>Kontroller:</b> Sağ/Sol Ok Tuşları veya <b>A / D</b> (Hareket) | <b>SPACE</b> (Ateş Et)
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const scoreEl = document.getElementById('score');
+        const livesEl = document.getElementById('lives');
+        const gameOverScreen = document.getElementById('gameOverScreen');
+        const finalScoreEl = document.getElementById('finalScore');
+
+        let score = 0;
+        let lives = 3;
+        let isGameOver = false;
+
+        // Oyuncu Gemisi
+        const player = {
+            x: canvas.width / 2 - 15,
+            y: canvas.height - 50,
+            width: 30,
+            height: 30,
+            speed: 6,
+            dx: 0
+        };
+
+        // Mermiler ve Düşmanlar
+        let bullets = [];
+        let enemies = [];
+        let lastShootTime = 0;
+
+        // Tuş Kontrolleri
+        const keys = {};
+
+        document.addEventListener('keydown', (e) => {
+            keys[e.code] = true;
+            if (e.code === 'Space' && !isGameOver) {
+                const now = Date.now();
+                if (now - lastShootTime > 200) { // Ateş etme hızı
+                    shoot();
+                    lastShootTime = now;
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            keys[e.code] = false;
+        });
+
+        function shoot() {
+            bullets.push({
+                x: player.x + player.width / 2 - 3,
+                y: player.y,
+                width: 6,
+                height: 14,
+                speed: 8
+            });
+        }
+
+        function spawnEnemy() {
+            if (isGameOver) return;
+            const size = Math.random() * 20 + 20;
+            enemies.push({
+                x: Math.random() * (canvas.width - size),
+                y: -size,
+                width: size,
+                height: size,
+                speed: Math.random() * 2 + 2
+            });
+        }
+
+        setInterval(spawnEnemy, 1000); // Her 1 saniyede bir düşman üret
+
+        function update() {
+            if (isGameOver) return;
+
+            // Oyuncu Hareketi
+            if ((keys['ArrowLeft'] || keys['KeyA']) && player.x > 0) {
+                player.x -= player.speed;
+            }
+            if ((keys['ArrowRight'] || keys['KeyD']) && player.x < canvas.width - player.width) {
+                player.x += player.speed;
+            }
+
+            // Mermileri Güncelle
+            for (let i = bullets.length - 1; i >= 0; i--) {
+                bullets[i].y -= bullets[i].speed;
+                if (bullets[i].y < 0) bullets.splice(i, 1);
+            }
+
+            // Düşmanları Güncelle ve Çarpışma Kontrolü
+            for (let i = enemies.length - 1; i >= 0; i--) {
+                enemies[i].y += enemies[i].speed;
+
+                // Gemiye Çarptı mı?
+                if (
+                    player.x < enemies[i].x + enemies[i].width &&
+                    player.x + player.width > enemies[i].x &&
+                    player.y < enemies[i].y + enemies[i].height &&
+                    player.y + player.height > enemies[i].y
+                ) {
+                    enemies.splice(i, 1);
+                    takeDamage();
+                    continue;
+                }
+
+                // Ekrandan Çıktı mı?
+                if (enemies[i].y > canvas.height) {
+                    enemies.splice(i, 1);
+                    takeDamage();
+                    continue;
+                }
+
+                // Mermiyle Vuruldu mu?
+                for (let j = bullets.length - 1; j >= 0; j--) {
+                    if (
+                        bullets[j].x < enemies[i].x + enemies[i].width &&
+                        bullets[j].x + bullets[j].width > enemies[i].x &&
+                        bullets[j].y < enemies[i].y + enemies[i].height &&
+                        bullets[j].y + bullets[j].height > enemies[i].y
+                    ) {
+                        enemies.splice(i, 1);
+                        bullets.splice(j, 1);
+                        score += 100;
+                        scoreEl.textContent = score;
+                        break;
+                    }
+                }
+            }
+        }
+
+        function takeDamage() {
+            lives--;
+            livesEl.textContent = '❤️'.repeat(Math.max(0, lives));
+            if (lives <= 0) {
+                isGameOver = true;
+                finalScoreEl.textContent = score;
+                gameOverScreen.style.display = 'flex';
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Oyuncu Gemisi (Neon Üçgen)
+            ctx.fillStyle = '#00f0ff';
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#00f0ff';
+            ctx.beginPath();
+            ctx.moveTo(player.x + player.width / 2, player.y);
+            ctx.lineTo(player.x, player.y + player.height);
+            ctx.lineTo(player.x + player.width, player.y + player.height);
+            ctx.closePath();
+            ctx.fill();
+
+            // Mermiler (Pembe Neon)
+            ctx.fillStyle = '#ff007f';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ff007f';
+            bullets.forEach(b => {
+                ctx.fillRect(b.x, b.y, b.width, b.height);
+            });
+
+            // Düşmanlar (Kırmızı Kare/Kaya)
+            ctx.fillStyle = '#ff3344';
+            ctx.shadowBlur = 12;
+            ctx.shadowColor = '#ff3344';
+            enemies.forEach(e => {
+                ctx.fillRect(e.x, e.y, e.width, e.height);
+            });
+
+            // Gölge Efektini Sıfırla
+            ctx.shadowBlur = 0;
+        }
+
+        function gameLoop() {
+            update();
+            draw();
+            requestAnimationFrame(gameLoop);
+        }
+
+        function resetGame() {
+            score = 0;
+            lives = 3;
+            isGameOver = false;
+            bullets = [];
+            enemies = [];
+            scoreEl.textContent = score;
+            livesEl.textContent = '❤️❤️❤️';
+            gameOverScreen.style.display = 'none';
+            player.x = canvas.width / 2 - 15;
+        }
+
+        // Oyunu Başlat
+        gameLoop();
+    </script>
+</body>
+</html>

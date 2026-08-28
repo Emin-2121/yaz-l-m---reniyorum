@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>NINJA WAR 3D: DYNAMIC OBSTACLES 🥷⚡</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        * {
+            margin: 0; padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none;
+        }
+
+        body {
+            background-color: #0b132b;
+            min-height: 100vh;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            overflow: hidden; color: #fff;
+        }
+
+        #game-container {
+            position: relative;
+            width: 100vw; max-width: 1150px; height: 580px;
+            box-shadow: 0 0 50px rgba(0, 180, 216, 0.4);
+            border-radius: 16px; overflow: hidden;
+            border: 2px solid #00b4d8; background: #87ceeb;
+        }
+
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .overlay-screen {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(11, 19, 43, 0.92);
+            backdrop-filter: blur(8px);
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 10;
+        }
+
+        .main-title {
+            font-size: 48px; color: #ffb703;
+            text-shadow: 0 0 20px rgba(255, 183, 3, 0.6);
+            letter-spacing: 4px; margin-bottom: 8px;
+            font-weight: 900; text-transform: uppercase;
+        }
+
+        .sub-title { font-size: 15px; color: #caf0f8; margin-bottom: 20px; letter-spacing: 1.5px; }
+
+        .menu-btn-group { display: flex; flex-direction: column; gap: 12px; width: 270px; }
+
+        .btn {
+            padding: 14px 28px;
+            background: linear-gradient(90deg, #fb8500, #ffb703);
+            border: none; border-radius: 10px;
+            color: #000; font-size: 16px; font-weight: bold;
+            cursor: pointer; box-shadow: 0 0 20px rgba(251, 133, 0, 0.5);
+            transition: all 0.2s ease; text-transform: uppercase;
+            letter-spacing: 1px; text-align: center;
+        }
+
+        .btn:hover { transform: translateY(-2px) scale(1.03); box-shadow: 0 0 30px rgba(255, 183, 3, 0.8); }
+
+        .btn-secondary { background: rgba(255, 255, 255, 0.08); border: 1px solid #00b4d8; color: #00b4d8; }
+
+        .hud-panel {
+            position: absolute; top: 15px; left: 20px; right: 20px;
+            display: flex; justify-content: space-between; align-items: center;
+            font-size: 16px; font-weight: 800; color: #00b4d8;
+            text-shadow: 0 0 8px rgba(0, 180, 216, 0.8);
+            pointer-events: none; z-index: 5;
+        }
+
+        .hp-display { color: #ff4d6d; font-size: 18px; letter-spacing: 2px; }
+
+        /* Kart Seçim Modalı */
+        .card-container {
+            display: flex; gap: 15px; margin-top: 15px;
+        }
+
+        .upgrade-card {
+            width: 180px; height: 220px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid #ffb703; border-radius: 12px;
+            padding: 15px; display: flex; flex-direction: column;
+            align-items: center; justify-content: space-between;
+            cursor: pointer; transition: 0.2s;
+        }
+
+        .upgrade-card:hover { transform: scale(1.08); background: rgba(255, 183, 3, 0.2); }
+
+        .sound-btn {
+            position: absolute; top: 15px; right: 15px; z-index: 12;
+            background: rgba(11, 19, 43, 0.8); border: 1px solid #00b4d8;
+            border-radius: 8px; color: #00b4d8; padding: 6px 12px;
+            cursor: pointer; font-size: 14px; font-weight: bold;
+        }
+
+        #statusText {
+            position: absolute; top: 70px; left: 50%;
+            transform: translateX(-50%); font-size: 24px; font-weight: bold;
+            color: #ffb703; text-shadow: 0 0 12px rgba(255, 183, 3, 0.9);
+            display: none; z-index: 5; pointer-events: none;
+        }
+
+        #toast {
+            position: absolute; top: 65px; right: -320px;
+            background: linear-gradient(90deg, #fb8500, #ffb703);
+            color: #000; padding: 12px 22px; border-radius: 10px;
+            font-weight: bold; z-index: 20; transition: 0.4s;
+        }
+
+        .controls-hint { margin-top: 15px; color: #caf0f8; font-size: 14px; text-align: center; }
+        .controls-hint b { color: #ffb703; }
+    </style>
+</head>
+<body>
+
+    <button class="sound-btn" onclick="toggleMute()" id="muteBtn">🔊 SES AÇIK</button>
+    <div id="toast">🏆 Başarım Kazanıldı!</div>
+
+    <div id="game-container">
+        <div id="statusText">⚡ KIL PAYI TEĞET GEÇTİN!</div>
+
+        <div id="hudPanel" class="hud-panel" style="display: none;">
+            <div>CAN: <span id="hpDisplay" class="hp-display">❤️❤️❤️❤️❤️</span></div>
+            <div>SKOR: <span id="scoreDisplay" style="color:#ffb703;">0</span> (REKOR: <span id="highScoreDisplay" style="color:#00b4d8;">0</span>)</div>
+            <div>COIN: 🪙 <span id="coinDisplay" style="color:#ffcc00;">0</span></div>
+        </div>
+
+        <div id="mainMenu" class="overlay-screen">
+            <h1 class="main-title">NINJA WAR 3D 🥷</h1>
+            <p class="sub-title">DİNAMİK ENGELLER & ROGUE-LITE BECERİLER ⚔️</p>
+            <div class="menu-btn-group">
+                <button class="btn" onclick="startGame()">OYUNA BAŞLA 🎮</button>
+            </div>
+        </div>
+
+        <div id="cardSelectMenu" class="overlay-screen" style="display: none;">
+            <h2 style="color:#ffb703; font-size:28px;">GÜÇLENDİRME SEÇ! 🎴</h2>
+            <p style="color:#caf0f8; font-size:13px;">Koşuna yön verecek yeteneği tıkla:</p>
+            <div class="card-container" id="cardOptions"></div>
+        </div>
+
+        <div id="gameOverScreen" class="overlay-screen" style="display: none;">
+            <h1 class="main-title" style="color:#ff4d6d;">ELENDİN! 💥</h1>
+            <p id="finalScoreText" class="sub-title">Skorun: 0</p>
+            <div class="menu-btn-group">
+                <button class="btn" onclick="startGame()">TEKRAR DENE 🪖</button>
+                <button class="btn btn-secondary" onclick="quitToMainMenu()">ANA MENÜ 🏠</button>
+            </div>
+        </div>
+
+        <div id="canvas3d"></div>
+    </div>
+
+    <div class="controls-hint">
+        🎮 <b>Yönlendirme:</b> A / D (Sol/Sağ) | <b>Zıpla:</b> SPACE | ⚔️ <b>Ateş Et:</b> SOL MOUSE | ⏸️ <b>Duraklat:</b> ESC veya P
+    </div>
+
+    <script>
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let isMuted = false;
+
+        function playSound(freq, type, duration) {
+            if (isMuted) return;
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            try {
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            document.getElementById('muteBtn').textContent = isMuted ? '🔇 SES SESSİZ' : '🔊 SES AÇIK';
+        }
+
+        let totalCoins = parseInt(localStorage.getItem('ninja_coins')) || 0;
+        let highScore = parseInt(localStorage.getItem('ninja_highscore')) || 0;
+
+        function saveGame() {
+            localStorage.setItem('ninja_coins', totalCoins);
+            localStorage.setItem('ninja_highscore', highScore);
+        }
+
+        let isPlaying = false;
+        let isPaused = false;
+        let hp = 5;
+        let score = 0;
+        let gameSpeed = 0.85;
+        let targetPosX = 0;
+
+        // Beceriler (Cards)
+        let laserPass = false;
+        let explosiveShot = false;
+
+        let nextCardScore = 1500;
+
+        // THREE.JS SAHNE
+        const container = document.getElementById('canvas3d');
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x87ceeb);
+
+        const camera = new THREE.PerspectiveCamera(60, 1150 / 580, 0.1, 1000);
+        camera.position.set(0, 5, 14);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true });
+        renderer.setSize(1150, 580);
+        container.appendChild(renderer.domElement);
+
+        const sunLight = new THREE.DirectionalLight(0xfff0dd, 1.4);
+        sunLight.position.set(20, 40, 20);
+        scene.add(sunLight);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+
+        // PİST
+        const road = new THREE.Mesh(new THREE.BoxGeometry(14, 1, 1000), new THREE.MeshStandardMaterial({ color: 0x333333, roughness: 0.5 }));
+        road.position.set(0, -0.5, -450);
+        scene.add(road);
+
+        const lineGeo = new THREE.BoxGeometry(0.3, 1.1, 1000);
+        const lineMat = new THREE.MeshBasicMaterial({ color: 0xffcc00 });
+        const leftLine = new THREE.Mesh(lineGeo, lineMat); leftLine.position.set(-7, -0.4, -450);
+        const rightLine = new THREE.Mesh(lineGeo, lineMat); rightLine.position.set(7, -0.4, -450);
+        scene.add(leftLine); scene.add(rightLine);
+
+        // Ninja Karakter
+        const playerGroup = new THREE.Group();
+        const bodyMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.5, 0.7, 1.6, 8), new THREE.MeshStandardMaterial({ color: 0x2b2d42 }));
+        bodyMesh.position.y = 1.1;
+        playerGroup.add(bodyMesh);
+
+        const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.45, 12, 12), new THREE.MeshStandardMaterial({ color: 0x111111 }));
+        headMesh.position.y = 2.0;
+        playerGroup.add(headMesh);
+
+        playerGroup.position.set(0, 0, 0);
+        scene.add(playerGroup);
+
+        let playerVelY = 0;
+        let isGrounded = true;
+        const gravity = -0.025;
+
+        let obstacles3D = [];
+        let coins3D = [];
+        let bullets3D = [];
+
+        function moveLeft() { if (targetPosX > -4.5 && isPlaying && !isPaused) targetPosX -= 4.5; }
+        function moveRight() { if (targetPosX < 4.5 && isPlaying && !isPaused) targetPosX += 4.5; }
+        function doJump() {
+            if (isGrounded && isPlaying && !isPaused) {
+                playerVelY = 0.55;
+                isGrounded = false;
+                playSound(450, 'sine', 0.15);
+            }
+        }
+        function doShoot() {
+            if (isPlaying && !isPaused) {
+                playSound(700, 'square', 0.08);
+                const bullet = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 0.15, 1, 8), new THREE.MeshBasicMaterial({ color: 0xffb703 }));
+                bullet.rotation.x = Math.PI / 2;
+                bullet.position.set(playerGroup.position.x, playerGroup.position.y + 1, playerGroup.position.z - 1);
+                scene.add(bullet);
+                bullets3D.push(bullet);
+            }
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (!isPlaying || isPaused) return;
+            if (e.code === 'KeyA' || e.code === 'ArrowLeft') moveLeft();
+            if (e.code === 'KeyD' || e.code === 'ArrowRight') moveRight();
+            if (e.code === 'Space') doJump();
+        });
+
+        window.addEventListener('mousedown', (e) => {
+            if (e.button === 0 && isPlaying && !isPaused) doShoot();
+        });
+
+        function updateUI() {
+            document.getElementById('coinDisplay').textContent = totalCoins;
+            document.getElementById('scoreDisplay').textContent = score;
+            document.getElementById('highScoreDisplay').textContent = highScore;
+            document.getElementById('hpDisplay').textContent = '❤️'.repeat(Math.max(0, hp));
+        }
+
+        function showStatus(text) {
+            const st = document.getElementById('statusText');
+            st.textContent = text;
+            st.style.display = 'block';
+            setTimeout(() => { st.style.display = 'none'; }, 1800);
+        }
+
+        function triggerCardSelect() {
+            isPaused = true;
+            const container = document.getElementById('cardOptions');
+            container.innerHTML = `
+                <div class="upgrade-card" onclick="selectCard('laser')">
+                    <h3>⚡ Delici Lazer</h3>
+                    <p style="font-size:11px; text-align:center;">Mermilerin engellerin içinden geçer!</p>
+                </div>
+                <div class="upgrade-card" onclick="selectCard('bomb')">
+                    <h3>💥 Patlamalı Mermi</h3>
+                    <p style="font-size:11px; text-align:center;">Engeller patlayarak yok olur!</p>
+                </div>
+                <div class="upgrade-card" onclick="selectCard('heal')">
+                    <h3>❤️ Can Doldur</h3>
+                    <p style="font-size:11px; text-align:center;">Canını 5'e tamamlar.</p>
+                </div>
+            `;
+            document.getElementById('cardSelectMenu').style.display = 'flex';
+        }
+
+        function selectCard(type) {
+            if (type === 'laser') laserPass = true;
+            if (type === 'bomb') explosiveShot = true;
+            if (type === 'heal') hp = 5;
+            document.getElementById('cardSelectMenu').style.display = 'none';
+            isPaused = false;
+            updateUI();
+        }
+
+        function startGame() {
+            document.querySelectorAll('.overlay-screen').forEach(s => s.style.display = 'none');
+            document.getElementById('hudPanel').style.display = 'flex';
+            isPlaying = true;
+            isPaused = false;
+            hp = 5;
+            score = 0;
+            gameSpeed = 0.85;
+            nextCardScore = 1500;
+            laserPass = false; explosiveShot = false;
+            resetGame();
+        }
+
+        function quitToMainMenu() {
+            isPlaying = false;
+            isPaused = false;
+            document.querySelectorAll('.overlay-screen').forEach(s => s.style.display = 'none');
+            document.getElementById('hudPanel').style.display = 'none';
+            document.getElementById('mainMenu').style.display = 'flex';
+            resetGame();
+        }
+
+        function resetGame() {
+            playerGroup.position.set(0, 0, 0);
+            targetPosX = 0;
+            playerVelY = 0;
+            obstacles3D.forEach(o => scene.remove(o));
+            coins3D.forEach(c => scene.remove(c));
+            bullets3D.forEach(b => scene.remove(b));
+            obstacles3D = []; coins3D = []; bullets3D = [];
+            updateUI();
+        }
+
+        // --- DİNAMİK YENİ ENGEL ÜRETİMİ ---
+        function spawnObstacle() {
+            if (!isPlaying || isPaused) return;
+            const lanes = [-4.5, 0, 4.5];
+            const posX = lanes[Math.floor(Math.random() * lanes.length)];
+            const obstacleType = Math.floor(Math.random() * 3);
+
+            let obs;
+            if (obstacleType === 0) {
+                // 1. Dönen Bıçak Barikatı
+                const geo = new THREE.TorusGeometry(1.2, 0.2, 8, 16);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xff4d6d, emissive: 0xff0055, emissiveIntensity: 0.5 });
+                obs = new THREE.Mesh(geo, mat);
+                obs.position.set(posX, 1.2, -130);
+                obs.userData = { type: 'blade' };
+            } else if (obstacleType === 1) {
+                // 2. Uçan Lazer Dronu (Havada Süzülür)
+                const geo = new THREE.ConeGeometry(1, 1.5, 8);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xd90429, roughness: 0.2 });
+                obs = new THREE.Mesh(geo, mat);
+                obs.position.set(posX, 2.8, -130); // Yüksek pozisyon!
+                obs.userData = { type: 'drone' };
+            } else {
+                // 3. Dikenli Mayın
+                const geo = new THREE.OctahedronGeometry(1.3, 0);
+                const mat = new THREE.MeshStandardMaterial({ color: 0xff3300 });
+                obs = new THREE.Mesh(geo, mat);
+                obs.position.set(posX, 1, -130);
+                obs.userData = { type: 'mine' };
+            }
+
+            scene.add(obs);
+            obstacles3D.push(obs);
+        }
+
+        function spawnCoin() {
+            if (!isPlaying || isPaused) return;
+            const coin = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.1, 16), new THREE.MeshStandardMaterial({ color: 0xffcc00, metalness: 0.9 }));
+            coin.rotation.x = Math.PI / 2;
+            const lanes = [-4.5, 0, 4.5];
+            coin.position.set(lanes[Math.floor(Math.random() * lanes.length)], 1.2, -130);
+            scene.add(coin);
+            coins3D.push(coin);
+        }
+
+        // --- OYUN DÖNGÜSÜ ---
+        let frame = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            if (isPlaying && !isPaused) {
+                frame++;
+                score += 1;
+
+                if (frame % 300 === 0) gameSpeed += 0.03;
+
+                // Rogue-lite Kart Seçim Tetiklemesi
+                if (score >= nextCardScore) {
+                    triggerCardSelect();
+                    nextCardScore += 2000;
+                }
+
+                playerGroup.position.x += (targetPosX - playerGroup.position.x) * 0.2;
+                playerGroup.position.y += playerVelY;
+                playerVelY += gravity;
+
+                if (playerGroup.position.y <= 0) {
+                    playerGroup.position.y = 0;
+                    playerVelY = 0;
+                    isGrounded = true;
+                }
+
+                if (frame % 40 === 0) spawnObstacle();
+                if (frame % 50 === 0) spawnCoin();
+
+                // Altınlar
+                for (let c = coins3D.length - 1; c >= 0; c--) {
+                    const coin = coins3D[c];
+                    coin.position.z += gameSpeed;
+                    coin.rotation.z += 0.05;
+
+                    if (coin.position.distanceTo(playerGroup.position) < 1.6) {
+                        playSound(900, 'sine', 0.1);
+                        totalCoins += 10;
+                        score += 30;
+                        saveGame();
+                        updateUI();
+                        scene.remove(coin);
+                        coins3D.splice(c, 1);
+                        continue;
+                    }
+
+                    if (coin.position.z > 10) { scene.remove(coin); coins3D.splice(c, 1); }
+                }
+
+                // Mermiler & Vuruşlar
+                for (let b = bullets3D.length - 1; b >= 0; b--) {
+                    const bullet = bullets3D[b];
+                    bullet.position.z -= 2.5;
+
+                    for (let o = obstacles3D.length - 1; o >= 0; o--) {
+                        if (bullet.position.distanceTo(obstacles3D[o].position) < 2) {
+                            playSound(200, 'sawtooth', 0.15);
+                            scene.remove(obstacles3D[o]);
+                            if (!laserPass) scene.remove(bullet);
+                            obstacles3D.splice(o, 1);
+                            if (!laserPass) bullets3D.splice(b, 1);
+                            totalCoins += 10;
+                            score += 50;
+                            saveGame();
+                            updateUI();
+                            break;
+                        }
+                    }
+
+                    if (bullets3D[b] && bullets3D[b].position.z < -150) {
+                        scene.remove(bullets3D[b]);
+                        bullets3D.splice(b, 1);
+                    }
+                }
+
+                // Engeller & Near-Miss (Teğet Geçme)
+                for (let i = obstacles3D.length - 1; i >= 0; i--) {
+                    const obs = obstacles3D[i];
+                    obs.position.z += gameSpeed;
+
+                    if (obs.userData.type === 'blade') obs.rotation.z += 0.08;
+                    if (obs.userData.type === 'mine') obs.rotation.x += 0.04;
+
+                    const dist = obs.position.distanceTo(playerGroup.position);
+
+                    // Near Miss (Kıl Payı Teğet Geçme)
+                    if (dist > 1.6 && dist < 2.3 && !obs.userData.nearMissed) {
+                        obs.userData.nearMissed = true;
+                        score += 100;
+                        showStatus("⚡ KIL PAYI TEĞET GEÇTİN (+100)!");
+                        playSound(1100, 'sine', 0.1);
+                    }
+
+                    // Çarpışma
+                    if (dist < 1.5) {
+                        playSound(120, 'sawtooth', 0.3);
+                        hp--;
+                        updateUI();
+
+                        if (hp <= 0) {
+                            isPlaying = false;
+                            if (score > highScore) highScore = score;
+                            saveGame();
+                            document.getElementById('finalScoreText').textContent = `Skorun: ${score} (Rekor: ${highScore})`;
+                            document.getElementById('gameOverScreen').style.display = 'flex';
+                        }
+
+                        scene.remove(obs);
+                        obstacles3D.splice(i, 1);
+                    }
+
+                    if (obstacles3D[i] && obstacles3D[i].position.z > 10) {
+                        scene.remove(obstacles3D[i]);
+                        obstacles3D.splice(i, 1);
+                    }
+                }
+
+                updateUI();
+            }
+
+            camera.position.x = playerGroup.position.x * 0.3;
+            camera.lookAt(playerGroup.position.x * 0.3, playerGroup.position.y + 1, playerGroup.position.z - 10);
+
+            renderer.render(scene, camera);
+        }
+
+        updateUI();
+        animate();
+    </script>
+</body>
+</html>
