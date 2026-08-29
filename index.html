@@ -3,12 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="theme-color" content="#060709">
     <title>3D RUNNER: GLOBAL LEADERBOARD 🥷🏆</title>
     
-    <!-- PWA MANIFEST BAĞLANTISI -->
-    <link rel="manifest" href="/manifest.json">
-    
+    <!-- GameDistribution SDK -->
+    <script>
+        window["GD_OPTIONS"] = {
+            "gameId": "f41126b7d9014d0288eb14d28718a158",
+            "onEvent": function(event) {
+                switch (event.name) {
+                    case "SDK_GAME_START":
+                        if (typeof isPaused !== 'undefined') isPaused = false;
+                        if (typeof audioCtx !== 'undefined' && audioCtx.state === 'suspended' && !isMuted) audioCtx.resume();
+                        break;
+                    case "SDK_GAME_PAUSE":
+                        if (typeof isPaused !== 'undefined') isPaused = true;
+                        break;
+                    case "SDK_GDPR_TRACKING":
+                    case "SDK_GDPR_TARGETING":
+                        break;
+                }
+            }
+        };
+        (function(d, s, id) {
+            var js, fjs = d.getElementsByTagName(s)[0];
+            if (d.getElementById(id)) return;
+            js = d.createElement(s);
+            js.id = id;
+            js.src = 'https://html5.api.gamedistribution.com/main.min.js';
+            fjs.parentNode.insertBefore(js, fjs);
+        }(document, 'script', 'gamedistribution-jssdk'));
+
+        function showGDAd() {
+            if (typeof gdsdk !== 'undefined' && gdsdk.showAd !== 'undefined') {
+                gdsdk.showAd();
+            }
+        }
+    </script>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
@@ -259,7 +290,7 @@
             </div>
         </div>
 
-        <!-- KÜRESEL SIRALAMA -->
+        <!-- KÜRESEL SIRALAMA (LEADERBOARD) -->
         <div id="leaderboardMenu" class="overlay-screen" style="display: none;">
             <h2 style="color:#ffd700; font-size:20px; margin-bottom: 4px;">🏆 KÜRESEL SKOR SIRALAMASI</h2>
             <p style="color:#a8dadc; font-size:11px; margin-bottom: 12px;">Dünya genelindeki en iyi oyuncular:</p>
@@ -355,7 +386,6 @@
             document.getElementById('menuHighScoreDisplay').textContent = highScore;
         }
 
-        // --- SOSYAL MEDYA GİRİŞİ & PAYLAŞIM ---
         function socialLogin(provider) {
             const inputName = prompt(`${provider} Hesabınızla Giriş Yapın:\nLütfen Oyuncu Adınızı Girin:`, playerName);
             if (inputName && inputName.trim() !== '') {
@@ -709,8 +739,17 @@
         }
 
         function triggerShake(intensity = 0.35) { shakeIntensity = intensity; }
-        function moveLeft() { if (targetPosX > -4.5 && isPlaying && !isPaused) targetPosX -= 4.5; }
-        function moveRight() { if (targetPosX < 4.5 && isPlaying && !isPaused) targetPosX += 4.5; }
+        
+        function moveLeft() { 
+            if (targetPosX > -4.5 && isPlaying && !isPaused) {
+                targetPosX -= 4.5;
+            }
+        }
+        function moveRight() { 
+            if (targetPosX < 4.5 && isPlaying && !isPaused) {
+                targetPosX += 4.5;
+            }
+        }
 
         function doJump() {
             if (isGrounded && isPlaying && !isPaused) {
@@ -813,6 +852,8 @@
         }
 
         function startGame() {
+            showGDAd(); // GameDistribution Başlangıç Reklamı
+
             const cur = charData[selectedChar];
             document.querySelectorAll('.overlay-screen').forEach(s => s.style.display = 'none');
             document.getElementById('hudPanel').style.display = 'flex';
@@ -936,7 +977,6 @@
                 if (frame % 34 === 0) spawnObstacle();
                 if (frame % 46 === 0) spawnCoin();
 
-                // Parça Efektleri
                 for (let pIdx = debris.length - 1; pIdx >= 0; pIdx--) {
                     const p = debris[pIdx];
                     p.position.x += p.userData.velX;
@@ -950,7 +990,6 @@
                     }
                 }
 
-                // Altınlar
                 for (let c = coins3D.length - 1; c >= 0; c--) {
                     const coin = coins3D[c];
                     coin.position.z += gameSpeed;
@@ -966,7 +1005,6 @@
                     if (coin.position.z > 10) { scene.remove(coin); coins3D.splice(c, 1); }
                 }
 
-                // Mermiler
                 for (let b = bullets3D.length - 1; b >= 0; b--) {
                     const bullet = bullets3D[b];
                     bullet.position.z -= 3.0;
@@ -1009,7 +1047,6 @@
                     }
                 }
 
-                // Engeller
                 for (let i = obstacles3D.length - 1; i >= 0; i--) {
                     const obs = obstacles3D[i];
                     obs.position.z += gameSpeed;
@@ -1044,6 +1081,7 @@
                             saveUserData();
                             document.getElementById('finalScoreText').textContent = `Skorun: ${score} (Rekor: ${highScore})`;
                             document.getElementById('gameOverScreen').style.display = 'flex';
+                            showGDAd(); // Game Over anında reklam gösterimi
                         }
 
                         scene.remove(obs);
@@ -1079,13 +1117,6 @@
         updateMenuStats();
         updateUI();
         animate();
-
-        // SERVICE WORKER KAYDI (PWA / Mobil Kurulum İçin)
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').catch(() => {});
-            });
-        }
     </script>
 </body>
 </html>
