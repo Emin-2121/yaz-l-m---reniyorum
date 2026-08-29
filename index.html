@@ -3,7 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#060709">
     <title>3D RUNNER: GLOBAL LEADERBOARD 🥷🏆</title>
+    
+    <!-- PWA MANIFEST BAĞLANTISI -->
+    <link rel="manifest" href="/manifest.json">
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
@@ -107,7 +112,6 @@
         }
         .btn-secondary:hover { background: rgba(69, 162, 158, 0.25); border-color: #66fcf1; color: #fff; }
 
-        /* Sosyal Butonlar */
         .social-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 4px; }
         .social-btn {
             flex: 1; padding: 10px; font-size: 11px; font-weight: 700;
@@ -119,7 +123,6 @@
         .btn-facebook { background: #1877f2; }
         .btn-share { background: #00b4d8; color: #000; }
 
-        /* Sıralama Tablosu */
         .leaderboard-box {
             width: 100%; max-width: 440px; background: rgba(20, 25, 35, 0.7);
             border: 1px solid rgba(69, 162, 158, 0.4); border-radius: 12px;
@@ -154,7 +157,6 @@
         }
         .btn-exit:hover { background: #ff0055; }
 
-        /* Pazar & Kart Seçimi */
         .card-container { 
             display: flex; gap: 10px; margin-top: 10px; 
             max-width: 100%; overflow-x: auto; padding-bottom: 8px;
@@ -257,7 +259,7 @@
             </div>
         </div>
 
-        <!-- KÜRESEL SIRALAMA (LEADERBOARD) -->
+        <!-- KÜRESEL SIRALAMA -->
         <div id="leaderboardMenu" class="overlay-screen" style="display: none;">
             <h2 style="color:#ffd700; font-size:20px; margin-bottom: 4px;">🏆 KÜRESEL SKOR SIRALAMASI</h2>
             <p style="color:#a8dadc; font-size:11px; margin-bottom: 12px;">Dünya genelindeki en iyi oyuncular:</p>
@@ -427,10 +429,9 @@
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x060814, 0.009);
 
-        // Dinamik Kamera Ayarı (Dikey ekranda geniş FOV)
         function getCameraFOV() {
             const aspect = window.innerWidth / window.innerHeight;
-            return aspect < 1 ? 75 : 55; // Dikey ekranda 75 derece geniş açı
+            return aspect < 1 ? 75 : 55;
         }
 
         const camera = new THREE.PerspectiveCamera(getCameraFOV(), window.innerWidth / window.innerHeight, 0.1, 1000);
@@ -708,17 +709,8 @@
         }
 
         function triggerShake(intensity = 0.35) { shakeIntensity = intensity; }
-        
-        function moveLeft() { 
-            if (targetPosX > -4.5 && isPlaying && !isPaused) {
-                targetPosX -= 4.5;
-            }
-        }
-        function moveRight() { 
-            if (targetPosX < 4.5 && isPlaying && !isPaused) {
-                targetPosX += 4.5;
-            }
-        }
+        function moveLeft() { if (targetPosX > -4.5 && isPlaying && !isPaused) targetPosX -= 4.5; }
+        function moveRight() { if (targetPosX < 4.5 && isPlaying && !isPaused) targetPosX += 4.5; }
 
         function doJump() {
             if (isGrounded && isPlaying && !isPaused) {
@@ -925,7 +917,6 @@
                     nextCardScore += 2000;
                 }
 
-                // Karakter Yumuşak ve Kesintisiz Geçiş
                 const moveSpeedX = (targetPosX - playerGroup.position.x);
                 playerGroup.position.x += moveSpeedX * 0.28;
                 playerGroup.rotation.z = -moveSpeedX * 0.08;
@@ -1072,7 +1063,6 @@
             let shakeY = (Math.random() - 0.5) * shakeIntensity;
             shakeIntensity *= 0.86;
 
-            // Kamera, karakteri yatay eksende dinamik olarak takip eder (asla kadraj dışına çıkmaz)
             const isPortrait = window.innerWidth < window.innerHeight;
             const followFactor = isPortrait ? 0.65 : 0.25; 
             const camDistZ = isPortrait ? 11.0 : 8.5;
@@ -1089,6 +1079,13 @@
         updateMenuStats();
         updateUI();
         animate();
+
+        // SERVICE WORKER KAYDI (PWA / Mobil Kurulum İçin)
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').catch(() => {});
+            });
+        }
     </script>
 </body>
 </html>
