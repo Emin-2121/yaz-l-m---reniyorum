@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>3D RUNNER: GLOBAL LEADERBOARD 🥷🏆</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
@@ -12,65 +12,87 @@
             box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             user-select: none;
+            -webkit-user-select: none;
             touch-action: none;
         }
 
-        body {
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background-color: #060709;
-            min-height: 100vh;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            overflow: hidden; color: #f0f0f0;
+            color: #f0f0f0;
         }
 
         #game-container {
             position: relative;
-            width: 100vw; max-width: 1150px; height: 580px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.95);
-            border-radius: 16px; overflow: hidden;
-            border: 2px solid #3a86ff; background: #0b0c10;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #0b0c10;
         }
 
-        canvas { display: block; width: 100%; height: 100%; }
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        canvas { 
+            display: block; 
+            width: 100% !important; 
+            height: 100% !important; 
+        }
 
         .overlay-screen {
             position: absolute; top: 0; left: 0;
             width: 100%; height: 100%;
             background: radial-gradient(circle, rgba(14, 20, 32, 0.88) 0%, rgba(6, 8, 14, 0.96) 100%);
             backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
             z-index: 10;
+            padding: 20px;
         }
 
         .main-title {
-            font-size: 44px; color: #ff0055;
+            font-size: clamp(28px, 6vw, 44px); 
+            color: #ff0055;
             letter-spacing: 4px; margin-bottom: 2px;
             font-weight: 900; text-transform: uppercase;
             text-shadow: 0 0 30px rgba(255, 0, 85, 0.8);
+            text-align: center;
         }
 
-        .sub-title { font-size: 13px; color: #66fcf1; margin-bottom: 16px; letter-spacing: 2px; text-transform: uppercase; }
+        .sub-title { 
+            font-size: clamp(10px, 2.5vw, 13px); 
+            color: #66fcf1; margin-bottom: 16px; 
+            letter-spacing: 2px; text-transform: uppercase; 
+            text-align: center;
+        }
 
         .stats-badge-container {
-            display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center;
+            display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; justify-content: center;
         }
 
         .stats-badge {
             background: rgba(255, 255, 255, 0.05);
             border: 1px solid rgba(102, 252, 241, 0.3);
-            border-radius: 20px; padding: 6px 14px;
-            font-size: 12px; font-weight: 700; color: #edf2f4;
+            border-radius: 20px; padding: 6px 12px;
+            font-size: 11px; font-weight: 700; color: #edf2f4;
             display: flex; align-items: center; gap: 6px;
         }
 
-        .menu-btn-group { display: flex; flex-direction: column; gap: 10px; width: 270px; }
+        .menu-btn-group { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 270px; }
 
         .btn {
             padding: 12px 24px;
             background: linear-gradient(135deg, #ff0055 0%, #d90429 100%);
             border: none; border-radius: 10px;
-            color: #fff; font-size: 14px; font-weight: 800;
+            color: #fff; font-size: 13px; font-weight: 800;
             cursor: pointer; transition: all 0.2s ease;
             text-transform: uppercase; letter-spacing: 1px; text-align: center;
             box-shadow: 0 6px 20px rgba(255, 0, 85, 0.35);
@@ -88,7 +110,7 @@
         /* Sosyal Butonlar */
         .social-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 4px; }
         .social-btn {
-            flex: 1; padding: 10px; font-size: 12px; font-weight: 700;
+            flex: 1; padding: 10px; font-size: 11px; font-weight: 700;
             border-radius: 8px; border: none; cursor: pointer;
             display: flex; align-items: center; justify-content: center; gap: 6px;
             transition: 0.2s; color: #fff;
@@ -97,11 +119,11 @@
         .btn-facebook { background: #1877f2; }
         .btn-share { background: #00b4d8; color: #000; }
 
-        /* Sıralama Tablosu (Leaderboard) */
+        /* Sıralama Tablosu */
         .leaderboard-box {
-            width: 90%; max-width: 440px; background: rgba(20, 25, 35, 0.7);
+            width: 100%; max-width: 440px; background: rgba(20, 25, 35, 0.7);
             border: 1px solid rgba(69, 162, 158, 0.4); border-radius: 12px;
-            padding: 12px; max-height: 250px; overflow-y: auto; margin-bottom: 14px;
+            padding: 12px; max-height: 220px; overflow-y: auto; margin-bottom: 14px;
         }
 
         .leaderboard-row {
@@ -115,77 +137,101 @@
         }
 
         .hud-panel {
-            position: absolute; top: 15px; left: 20px; right: 20px;
+            position: absolute; top: 15px; left: 15px; right: 15px;
             display: flex; justify-content: space-between; align-items: center;
-            font-size: 15px; font-weight: 800; color: #66fcf1;
-            pointer-events: none; z-index: 5;
+            font-size: clamp(11px, 3vw, 15px); font-weight: 800; color: #66fcf1;
+            z-index: 15; pointer-events: none;
         }
 
+        .hud-panel * { pointer-events: auto; }
+
+        .btn-exit {
+            background: rgba(217, 4, 41, 0.85);
+            color: #fff; border: 1px solid #ff0055;
+            padding: 6px 12px; border-radius: 8px;
+            font-size: 11px; font-weight: 800; cursor: pointer;
+            transition: 0.2s;
+        }
+        .btn-exit:hover { background: #ff0055; }
+
         /* Pazar & Kart Seçimi */
-        .card-container { display: flex; gap: 14px; margin-top: 10px; }
+        .card-container { 
+            display: flex; gap: 10px; margin-top: 10px; 
+            max-width: 100%; overflow-x: auto; padding-bottom: 8px;
+        }
 
         .upgrade-card, .shop-card {
-            width: 210px; height: 265px;
+            width: 140px; min-width: 140px; height: 230px;
             background: rgba(20, 25, 35, 0.7);
             border: 1.5px solid rgba(69, 162, 158, 0.4); border-radius: 14px;
-            padding: 14px; display: flex; flex-direction: column;
+            padding: 10px; display: flex; flex-direction: column;
             align-items: center; justify-content: space-between;
             transition: 0.25s ease;
+        }
+
+        @media (min-width: 600px) {
+            .upgrade-card, .shop-card { width: 190px; min-width: 190px; height: 260px; padding: 14px; }
         }
 
         .upgrade-card:hover, .shop-card:hover { transform: translateY(-4px); border-color: #ff0055; }
         .shop-card.selected { border-color: #ffd700; background: rgba(255, 215, 0, 0.08); }
 
-        .shop-icon { font-size: 40px; margin-top: 4px; }
-        .shop-name { font-size: 15px; font-weight: 800; color: #fff; }
-        .shop-desc { font-size: 11px; text-align: center; color: #a8dadc; }
+        .shop-icon { font-size: 32px; margin-top: 2px; }
+        .shop-name { font-size: 13px; font-weight: 800; color: #fff; text-align: center; }
+        .shop-desc { font-size: 10px; text-align: center; color: #a8dadc; }
         .shop-btn {
-            width: 100%; padding: 8px; font-size: 11px; font-weight: 800;
+            width: 100%; padding: 7px; font-size: 10px; font-weight: 800;
             border-radius: 6px; border: none; cursor: pointer; text-transform: uppercase;
         }
 
         .top-controls {
             position: absolute; top: 15px; right: 15px; z-index: 12;
-            display: flex; gap: 8px; align-items: center;
+            display: flex; gap: 6px; align-items: center;
         }
 
         .theme-select, .sound-btn {
             background: rgba(20, 25, 35, 0.85); border: 1px solid #45a29e;
-            border-radius: 8px; color: #66fcf1; padding: 6px 12px;
-            cursor: pointer; font-size: 12px; font-weight: 700; outline: none;
+            border-radius: 8px; color: #66fcf1; padding: 5px 10px;
+            cursor: pointer; font-size: 11px; font-weight: 700; outline: none;
         }
 
         #statusText {
             position: absolute; top: 60px; left: 50%;
-            transform: translateX(-50%); font-size: 20px; font-weight: 800;
+            transform: translateX(-50%); font-size: clamp(14px, 3.5vw, 20px); font-weight: 800;
             color: #ff0055; display: none; z-index: 5; pointer-events: none;
-            background: rgba(0,0,0,0.75); padding: 6px 18px; border-radius: 20px;
-            border: 1px solid #ff0055;
+            background: rgba(0,0,0,0.75); padding: 6px 14px; border-radius: 20px;
+            border: 1px solid #ff0055; text-align: center; white-space: nowrap;
         }
 
-        .controls-hint { margin-top: 12px; color: #8d99ae; font-size: 13px; text-align: center; }
+        .controls-hint { 
+            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            color: #8d99ae; font-size: 11px; text-align: center; z-index: 6; pointer-events: none;
+            width: 90%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
         .controls-hint b { color: #66fcf1; }
     </style>
 </head>
 <body>
 
-    <div class="top-controls">
+    <div class="top-controls" id="topControls">
         <select class="theme-select" id="themeSelector" onchange="changeTheme(this.value)">
-            <option value="cosmic">🌌 Derin Kozmoz</option>
-            <option value="crimson">🔴 Kızıl Gezegen</option>
-            <option value="emerald">🟢 Zümrüt Gece</option>
-            <option value="solarpunk">🌅 Altın Ufuk</option>
+            <option value="cosmic">🌌 Kozmoz</option>
+            <option value="crimson">🔴 Kızıl</option>
+            <option value="emerald">🟢 Zümrüt</option>
+            <option value="solarpunk">🌅 Ufuk</option>
         </select>
-        <button class="sound-btn" onclick="toggleMute()" id="muteBtn">🔊 SES AÇIK</button>
+        <button class="sound-btn" onclick="toggleMute()" id="muteBtn">🔊 SES</button>
     </div>
 
     <div id="game-container">
         <div id="statusText">⚡ KIL PAYI TEĞET GEÇTİN!</div>
 
+        <!-- OYUN İÇİ HUD VE ÇIKIŞ BUTONU -->
         <div id="hudPanel" class="hud-panel" style="display: none;">
+            <button class="btn-exit" onclick="quitToMainMenu()">❌ ÇIKIŞ</button>
             <div>CAN: <span id="hpDisplay" style="letter-spacing: 2px;">❤️❤️❤️</span></div>
-            <div>SKOR: <span id="scoreDisplay" style="color:#fff;">0</span> (REKOR: <span id="highScoreDisplay" style="color:#66fcf1;">0</span>)</div>
-            <div>COIN: 🪙 <span id="coinDisplay" style="color:#ffd700;">0</span></div>
+            <div>SKOR: <span id="scoreDisplay" style="color:#fff;">0</span> (<span id="highScoreDisplay" style="color:#66fcf1;">0</span>)</div>
+            <div>🪙 <span id="coinDisplay" style="color:#ffd700;">0</span></div>
         </div>
 
         <!-- ANA MENÜ -->
@@ -213,8 +259,8 @@
 
         <!-- KÜRESEL SIRALAMA (LEADERBOARD) -->
         <div id="leaderboardMenu" class="overlay-screen" style="display: none;">
-            <h2 style="color:#ffd700; font-size:24px; margin-bottom: 4px;">🏆 KÜRESEL SKOR SIRALAMASI</h2>
-            <p style="color:#a8dadc; font-size:12px; margin-bottom: 12px;">Dünya genelindeki en iyi oyuncular:</p>
+            <h2 style="color:#ffd700; font-size:20px; margin-bottom: 4px;">🏆 KÜRESEL SKOR SIRALAMASI</h2>
+            <p style="color:#a8dadc; font-size:11px; margin-bottom: 12px;">Dünya genelindeki en iyi oyuncular:</p>
             
             <div class="leaderboard-box" id="leaderboardList"></div>
             
@@ -223,16 +269,16 @@
 
         <!-- KARAKTER PAZARI -->
         <div id="shopMenu" class="overlay-screen" style="display: none;">
-            <h2 style="color:#ffd700; font-size:24px; margin-bottom: 2px;">KARAKTERLER & GELİŞTİRME 🛒</h2>
-            <p style="color:#66fcf1; font-size:13px; margin-bottom: 12px;">Mevcut Altın: 🪙 <span id="shopCoinDisplay">0</span></p>
+            <h2 style="color:#ffd700; font-size:20px; margin-bottom: 2px;">KARAKTERLER 🛒</h2>
+            <p style="color:#66fcf1; font-size:12px; margin-bottom: 10px;">Mevcut Altın: 🪙 <span id="shopCoinDisplay">0</span></p>
             <div class="card-container" id="shopCardContainer"></div>
-            <button class="btn btn-secondary" style="margin-top: 18px; width: 200px;" onclick="closeShop()">ANA MENÜYE DÖN</button>
+            <button class="btn btn-secondary" style="margin-top: 14px; width: 200px;" onclick="closeShop()">ANA MENÜYE DÖN</button>
         </div>
 
         <!-- ROGUE-LITE KARTLAR -->
         <div id="cardSelectMenu" class="overlay-screen" style="display: none;">
-            <h2 style="color:#66fcf1; font-size:24px; margin-bottom: 4px;">GÜÇLENDİRME SEÇ</h2>
-            <p style="color:#c5c6c7; font-size:13px;">Hayatta kalmak için yetenek seç:</p>
+            <h2 style="color:#66fcf1; font-size:20px; margin-bottom: 4px;">GÜÇLENDİRME SEÇ</h2>
+            <p style="color:#c5c6c7; font-size:12px;">Hayatta kalmak için yetenek seç:</p>
             <div class="card-container" id="cardOptions"></div>
         </div>
 
@@ -251,7 +297,7 @@
     </div>
 
     <div class="controls-hint">
-        🎮 <b>Yön:</b> A / D veya Kaydır | <b>Zıpla:</b> SPACE | ⚔️ <b>Ateş:</b> Sol Tık / Dokun
+        🎮 <b>Yön:</b> Kaydır / A-D | <b>Zıpla:</b> Yukarı Kaydır / SPACE | ⚔️ <b>Ateş:</b> Dokun / Tık
     </div>
 
     <script>
@@ -277,7 +323,7 @@
 
         function toggleMute() {
             isMuted = !isMuted;
-            document.getElementById('muteBtn').textContent = isMuted ? '🔇 SES SESSİZ' : '🔊 SES AÇIK';
+            document.getElementById('muteBtn').textContent = isMuted ? '🔇 SES' : '🔊 SES';
         }
 
         // --- VERİ & KULLANICI YÖNETİMİ ---
@@ -319,7 +365,7 @@
         }
 
         function shareScore() {
-            const text = `🎮 3D Runner oyununda ${score} skor yaptım! Sen de katıl: https://github.com/`;
+            const text = `🎮 3D Runner oyununda ${score} skor yaptım! Sen de oyna: ${window.location.href}`;
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(text);
                 alert('🏆 Skorunuz panoya kopyalandı! Arkadaşlarınızla paylaşabilirsiniz.');
@@ -328,7 +374,7 @@
             }
         }
 
-        // --- KÜRESEL SIRALAMA (LEADERBOARD) SİSTEMİ ---
+        // --- KÜRESEL SIRALAMA SİSTEMİ ---
         const fakeGlobalLeaderboard = [
             { name: "ShadowMaster", score: 8420 },
             { name: "CyberNinja_99", score: 6210 },
@@ -376,20 +422,29 @@
         let shakeIntensity = 0;
         let lastShootTime = 0;
 
-        // 3D Sahne
+        // 3D Sahne Tanımları
         const container = document.getElementById('canvas3d');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x060814, 0.009);
 
-        const camera = new THREE.PerspectiveCamera(55, 1150 / 580, 0.1, 1000);
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 3.8, 8.5);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: "high-performance" });
-        renderer.setSize(1150, 580);
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
         renderer.shadowMap.enabled = true;
         renderer.shadowMap.type = THREE.BasicShadowMap;
         container.appendChild(renderer.domElement);
+
+        window.addEventListener('resize', () => {
+            if (camera && renderer) {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            }
+        });
 
         const clock = new THREE.Clock();
 
@@ -558,11 +613,11 @@
 
                 let btnHtml = '';
                 if (!item.unlocked) {
-                    btnHtml = `<button class="shop-btn btn" onclick="buyCharacter('${key}')">🪙 ${item.price} SATIN AL</button>`;
+                    btnHtml = `<button class="shop-btn btn" onclick="buyCharacter('${key}')">🪙 ${item.price} AL</button>`;
                 } else if (isCurrent) {
                     btnHtml = `
                         <button class="shop-btn" style="background:#45a29e; color:#0b0c10; font-weight:800; margin-bottom:4px;">SEÇİLİ</button>
-                        ${item.level < 3 ? `<button class="shop-btn btn-secondary" onclick="upgradeCharacter('${key}')">⬆️ LVL ${item.level+1} (🪙 ${upgradePrice})</button>` : `<div style="font-size:11px; color:#ffd700; font-weight:700;">★ MAKSİMUM SEVİYE</div>`}
+                        ${item.level < 3 ? `<button class="shop-btn btn-secondary" onclick="upgradeCharacter('${key}')">⬆️ LVL ${item.level+1} (🪙 ${upgradePrice})</button>` : `<div style="font-size:10px; color:#ffd700; font-weight:700;">★ MAKS.</div>`}
                     `;
                 } else {
                     btnHtml = `
@@ -573,7 +628,7 @@
 
                 card.innerHTML = `
                     <div class="shop-icon">${item.icon}</div>
-                    <div class="shop-name">${item.name} <span style="color:#ffd700; font-size:12px;">(Lv.${item.level})</span></div>
+                    <div class="shop-name">${item.name} <span style="color:#ffd700; font-size:11px;">(Lv.${item.level})</span></div>
                     <div class="shop-desc">${item.desc}<br><b style="color:#fff;">Can:</b> ${item.maxHp + (item.level-1)} | <b style="color:#fff;">Hız:</b> x${item.speed}</div>
                     <div style="width:100%;">${btnHtml}</div>
                 `;
@@ -646,8 +701,20 @@
         }
 
         function triggerShake(intensity = 0.35) { shakeIntensity = intensity; }
-        function moveLeft() { if (targetPosX > -4.5 && isPlaying && !isPaused) targetPosX -= 4.5; }
-        function moveRight() { if (targetPosX < 4.5 && isPlaying && !isPaused) targetPosX += 4.5; }
+        
+        // --- HIZLANDIRILMIŞ REAKSİYON FONKSİYONLARI ---
+        function moveLeft() { 
+            if (targetPosX > -4.5 && isPlaying && !isPaused) {
+                targetPosX -= 4.5;
+                playerGroup.position.x = THREE.MathUtils.lerp(playerGroup.position.x, targetPosX, 0.45);
+            }
+        }
+        function moveRight() { 
+            if (targetPosX < 4.5 && isPlaying && !isPaused) {
+                targetPosX += 4.5;
+                playerGroup.position.x = THREE.MathUtils.lerp(playerGroup.position.x, targetPosX, 0.45);
+            }
+        }
 
         function doJump() {
             if (isGrounded && isPlaying && !isPaused) {
@@ -660,7 +727,7 @@
 
         function doShoot() {
             const now = performance.now();
-            if (isPlaying && !isPaused && now - lastShootTime > 250) {
+            if (isPlaying && !isPaused && now - lastShootTime > 200) {
                 lastShootTime = now;
                 playSound(650, 'square', 0.05);
                 const bullet = new THREE.Mesh(bulletGeo, bulletMat);
@@ -679,22 +746,29 @@
         });
 
         window.addEventListener('mousedown', (e) => {
-            if (e.button === 0 && isPlaying && !isPaused) doShoot();
+            if (e.button === 0 && isPlaying && !isPaused && e.target.tagName === 'CANVAS') doShoot();
         });
 
         let touchStartX = 0, touchStartY = 0;
         window.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+            touchStartX = e.touches[0].clientX; 
+            touchStartY = e.touches[0].clientY;
         }, { passive: true });
 
         window.addEventListener('touchend', (e) => {
-            if (!isPlaying || isPaused) return;
+            if (!isPlaying || isPaused || e.target.tagName === 'BUTTON' || e.target.tagName === 'SELECT') return;
             let diffX = e.changedTouches[0].clientX - touchStartX;
             let diffY = e.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(diffX) > Math.abs(diffY)) {
-                if (diffX > 35) moveRight(); else if (diffX < -35) moveLeft();
+            
+            // Hassasiyet 20px'e çekildi (gecikmesiz tepki)
+            if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
+                if (Math.abs(diffX) > Math.abs(diffY)) {
+                    if (diffX > 20) moveRight(); else if (diffX < -20) moveLeft();
+                } else {
+                    if (diffY < -20) doJump();
+                }
             } else {
-                if (diffY < -35) doJump(); else doShoot();
+                doShoot();
             }
         });
 
@@ -716,16 +790,16 @@
             const cardCont = document.getElementById('cardOptions');
             cardCont.innerHTML = `
                 <div class="upgrade-card" onclick="selectCard('laser')">
-                    <h3 style="color:#66fcf1;">⚡ Delici Ok</h3>
-                    <p style="font-size:12px; text-align:center; color:#ddd;">Mermiler tüm engelleri deler.</p>
+                    <h3 style="color:#66fcf1; font-size:16px;">⚡ Delici Ok</h3>
+                    <p style="font-size:11px; text-align:center; color:#ddd;">Mermiler tüm engelleri deler.</p>
                 </div>
                 <div class="upgrade-card" onclick="selectCard('bomb')">
-                    <h3 style="color:#ff0055;">💥 Alan Patlaması</h3>
-                    <p style="font-size:12px; text-align:center; color:#ddd;">Vurulan engel tüm alanı temizler.</p>
+                    <h3 style="color:#ff0055; font-size:16px;">💥 Alan Patlaması</h3>
+                    <p style="font-size:11px; text-align:center; color:#ddd;">Vurulan engel tüm alanı temizler.</p>
                 </div>
                 <div class="upgrade-card" onclick="selectCard('heal')">
-                    <h3 style="color:#ffd700;">❤️ Can Doldur</h3>
-                    <p style="font-size:12px; text-align:center; color:#ddd;">Canı tekrar maksimuma tamamlar.</p>
+                    <h3 style="color:#ffd700; font-size:16px;">❤️ Can Doldur</h3>
+                    <p style="font-size:11px; text-align:center; color:#ddd;">Canı tekrar maksimuma tamamlar.</p>
                 </div>
             `;
             document.getElementById('cardSelectMenu').style.display = 'flex';
@@ -848,8 +922,9 @@
                     nextCardScore += 2000;
                 }
 
+                // Gecikmesiz hızlı geçiş (0.42 çarpanı)
                 const moveSpeedX = (targetPosX - playerGroup.position.x);
-                playerGroup.position.x += moveSpeedX * 0.22;
+                playerGroup.position.x += moveSpeedX * 0.42;
                 playerGroup.rotation.z = -moveSpeedX * 0.08;
                 
                 playerGroup.position.y += playerVelY;
