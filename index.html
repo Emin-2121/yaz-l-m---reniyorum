@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>3D RUNNER: GLOBAL LEADERBOARD 🥷🏆</title>
+    
+    <!-- PWA Manifest Bağlantısı -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#ff0055">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1077/1077114.png">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <style>
@@ -107,7 +116,6 @@
         }
         .btn-secondary:hover { background: rgba(69, 162, 158, 0.25); border-color: #66fcf1; color: #fff; }
 
-        /* Sosyal Butonlar */
         .social-btn-row { display: flex; gap: 10px; width: 100%; justify-content: center; margin-top: 4px; }
         .social-btn {
             flex: 1; padding: 10px; font-size: 11px; font-weight: 700;
@@ -119,7 +127,6 @@
         .btn-facebook { background: #1877f2; }
         .btn-share { background: #00b4d8; color: #000; }
 
-        /* Sıralama Tablosu */
         .leaderboard-box {
             width: 100%; max-width: 440px; background: rgba(20, 25, 35, 0.7);
             border: 1px solid rgba(69, 162, 158, 0.4); border-radius: 12px;
@@ -154,7 +161,6 @@
         }
         .btn-exit:hover { background: #ff0055; }
 
-        /* Pazar & Kart Seçimi */
         .card-container { 
             display: flex; gap: 10px; margin-top: 10px; 
             max-width: 100%; overflow-x: auto; padding-bottom: 8px;
@@ -226,7 +232,6 @@
     <div id="game-container">
         <div id="statusText">⚡ KIL PAYI TEĞET GEÇTİN!</div>
 
-        <!-- OYUN İÇİ HUD VE ÇIKIŞ BUTONU -->
         <div id="hudPanel" class="hud-panel" style="display: none;">
             <button class="btn-exit" onclick="quitToMainMenu()">❌ ÇIKIŞ</button>
             <div>CAN: <span id="hpDisplay" style="letter-spacing: 2px;">❤️❤️❤️</span></div>
@@ -257,7 +262,7 @@
             </div>
         </div>
 
-        <!-- KÜRESEL SIRALAMA (LEADERBOARD) -->
+        <!-- KÜRESEL SIRALAMA -->
         <div id="leaderboardMenu" class="overlay-screen" style="display: none;">
             <h2 style="color:#ffd700; font-size:20px; margin-bottom: 4px;">🏆 KÜRESEL SKOR SIRALAMASI</h2>
             <p style="color:#a8dadc; font-size:11px; margin-bottom: 12px;">Dünya genelindeki en iyi oyuncular:</p>
@@ -301,6 +306,13 @@
     </div>
 
     <script>
+        // PWA Servis Kaydı
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('sw.js').catch(() => {});
+            });
+        }
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         let isMuted = false;
 
@@ -326,7 +338,6 @@
             document.getElementById('muteBtn').textContent = isMuted ? '🔇 SES' : '🔊 SES';
         }
 
-        // --- VERİ & KULLANICI YÖNETİMİ ---
         let playerName = localStorage.getItem('ninja_player_name') || 'Misafir Ninja';
         let totalCoins = parseInt(localStorage.getItem('ninja_coins')) || 0;
         let highScore = parseInt(localStorage.getItem('ninja_highscore')) || 0;
@@ -353,7 +364,6 @@
             document.getElementById('menuHighScoreDisplay').textContent = highScore;
         }
 
-        // --- SOSYAL MEDYA GİRİŞİ & PAYLAŞIM ---
         function socialLogin(provider) {
             const inputName = prompt(`${provider} Hesabınızla Giriş Yapın:\nLütfen Oyuncu Adınızı Girin:`, playerName);
             if (inputName && inputName.trim() !== '') {
@@ -374,7 +384,6 @@
             }
         }
 
-        // --- KÜRESEL SIRALAMA SİSTEMİ ---
         const fakeGlobalLeaderboard = [
             { name: "ShadowMaster", score: 8420 },
             { name: "CyberNinja_99", score: 6210 },
@@ -422,7 +431,6 @@
         let shakeIntensity = 0;
         let lastShootTime = 0;
 
-        // 3D Sahne Tanımları
         const container = document.getElementById('canvas3d');
         const scene = new THREE.Scene();
         scene.fog = new THREE.FogExp2(0x060814, 0.009);
@@ -456,7 +464,6 @@
         const hemiLight = new THREE.HemisphereLight(0xffffff, 0x111122, 0.7);
         scene.add(hemiLight);
 
-        // Gökyüzü Elemanları
         const starGeo = new THREE.BufferGeometry();
         const starCoords = new Float32Array(600 * 3);
         for (let i = 0; i < 600 * 3; i += 3) {
@@ -486,7 +493,6 @@
         const speedDust = new THREE.Points(dustGeo, dustMat);
         scene.add(speedDust);
 
-        // Yol & Sütunlar
         const roadMat = new THREE.MeshStandardMaterial({ color: 0x0f141d, roughness: 0.8 });
         const road = new THREE.Mesh(new THREE.PlaneGeometry(14, 1000), roadMat);
         road.rotation.x = -Math.PI / 2;
@@ -531,7 +537,6 @@
         }
         changeTheme('cosmic');
 
-        // Karakter Yükleme
         const playerGroup = new THREE.Group();
         scene.add(playerGroup);
 
@@ -702,7 +707,6 @@
 
         function triggerShake(intensity = 0.35) { shakeIntensity = intensity; }
         
-        // --- HIZLANDIRILMIŞ REAKSİYON FONKSİYONLARI ---
         function moveLeft() { 
             if (targetPosX > -4.5 && isPlaying && !isPaused) {
                 targetPosX -= 4.5;
@@ -760,7 +764,6 @@
             let diffX = e.changedTouches[0].clientX - touchStartX;
             let diffY = e.changedTouches[0].clientY - touchStartY;
             
-            // Hassasiyet 20px'e çekildi (gecikmesiz tepki)
             if (Math.abs(diffX) > 20 || Math.abs(diffY) > 20) {
                 if (Math.abs(diffX) > Math.abs(diffY)) {
                     if (diffX > 20) moveRight(); else if (diffX < -20) moveLeft();
@@ -922,7 +925,6 @@
                     nextCardScore += 2000;
                 }
 
-                // Gecikmesiz hızlı geçiş (0.42 çarpanı)
                 const moveSpeedX = (targetPosX - playerGroup.position.x);
                 playerGroup.position.x += moveSpeedX * 0.42;
                 playerGroup.rotation.z = -moveSpeedX * 0.08;
@@ -942,7 +944,6 @@
                 if (frame % 34 === 0) spawnObstacle();
                 if (frame % 46 === 0) spawnCoin();
 
-                // Parça Efektleri
                 for (let pIdx = debris.length - 1; pIdx >= 0; pIdx--) {
                     const p = debris[pIdx];
                     p.position.x += p.userData.velX;
@@ -956,7 +957,6 @@
                     }
                 }
 
-                // Altınlar
                 for (let c = coins3D.length - 1; c >= 0; c--) {
                     const coin = coins3D[c];
                     coin.position.z += gameSpeed;
@@ -972,7 +972,6 @@
                     if (coin.position.z > 10) { scene.remove(coin); coins3D.splice(c, 1); }
                 }
 
-                // Mermiler
                 for (let b = bullets3D.length - 1; b >= 0; b--) {
                     const bullet = bullets3D[b];
                     bullet.position.z -= 3.0;
@@ -1015,7 +1014,6 @@
                     }
                 }
 
-                // Engeller
                 for (let i = obstacles3D.length - 1; i >= 0; i--) {
                     const obs = obstacles3D[i];
                     obs.position.z += gameSpeed;
